@@ -34,15 +34,15 @@ canvas.bind("<B1-Motion>", on_drag)
 
 # ---------------- Load images ----------------
 base_img = ImageTk.PhotoImage(
-    Image.open("assets/base.png").resize((WINDOW_SIZE, WINDOW_SIZE))
+    Image.open(r"F:\Projects\Nexa\NexaAssistant\overlay\assets\base.png").resize((WINDOW_SIZE, WINDOW_SIZE))
 )
 
 eyes_closed_img = ImageTk.PhotoImage(
-    Image.open("assets/eyes_closed.png").resize((WINDOW_SIZE, WINDOW_SIZE))
+    Image.open(r"F:\Projects\Nexa\NexaAssistant\overlay\assets\eyes_closed.png").resize((WINDOW_SIZE, WINDOW_SIZE))
 )
 
 mouth_open_img = ImageTk.PhotoImage(
-    Image.open("assets/mouth_open.png").resize((WINDOW_SIZE, WINDOW_SIZE))
+    Image.open(r"F:\Projects\Nexa\NexaAssistant\overlay\assets\mouth_open.png").resize((WINDOW_SIZE, WINDOW_SIZE))
 )
 
 canvas.create_rectangle(0, 0, WINDOW_SIZE, WINDOW_SIZE, fill="white", outline="")

@@ -6,7 +6,7 @@ from faster_whisper import WhisperModel
 SAMPLE_RATE = 16000
 DURATION = 5  # seconds
 
-model = WhisperModel("small", device="cuda", compute_type="float16")
+model = WhisperModel("small", device="cpu", compute_type="int8")
 
 def record_audio():
     print("🎙️ Listening...")

@@ -47,8 +47,10 @@ class AvatarApp:
                         # Streaming token received - start talking
                         self.safe_start_talking()
                         
-        except websockets.exceptions.ConnectionRefused:
-            print("❌ Could not connect to backend. Make sure it's running on port 8000")
+        except (websockets.exceptions.ConnectionClosedError, websockets.exceptions.ConnectionClosedOK) as e:
+            print(f"❌ Connection closed: {e}")
+        except OSError as e:
+            print(f"❌ Could not connect to backend. Make sure it's running on port 8000. Error: {e}")
         except Exception as e:
             print(f"❌ WebSocket error: {e}")
     
