@@ -1,11 +1,9 @@
 # Start Avatar Overlay Script
 # Make sure backend is running first!
 
-Write-Host "=" -NoNewline -ForegroundColor Cyan
-Write-Host "=" * 59 -ForegroundColor Cyan
-Write-Host "  🎨 Starting Nexa Assistant Overlay" -ForegroundColor Green
-Write-Host "=" -NoNewline -ForegroundColor Cyan
-Write-Host "=" * 59 -ForegroundColor Cyan
+Write-Host "============================================================" -ForegroundColor Cyan
+Write-Host "  Starting Nexa Assistant Overlay" -ForegroundColor Green
+Write-Host "============================================================" -ForegroundColor Cyan
 
 Set-Location -Path "$PSScriptRoot\overlay"
 
@@ -29,11 +27,11 @@ if (-Not $packages) {
 }
 
 # Start overlay
-Write-Host "`n" + "=" * 60 -ForegroundColor Cyan
-Write-Host "🤖 Starting avatar overlay..." -ForegroundColor Green
-Write-Host "📡 Connecting to backend at ws://127.0.0.1:8000/ws/chat" -ForegroundColor Cyan
-Write-Host "=" -NoNewline -ForegroundColor Cyan
-Write-Host "=" * 59 -ForegroundColor Cyan
+Write-Host ""
+Write-Host "============================================================" -ForegroundColor Cyan
+Write-Host "Starting avatar overlay..." -ForegroundColor Green
+Write-Host "Connecting to backend at ws://127.0.0.1:8000/ws/chat" -ForegroundColor Cyan
+Write-Host "============================================================" -ForegroundColor Cyan
 Write-Host ""
 
 python main.py

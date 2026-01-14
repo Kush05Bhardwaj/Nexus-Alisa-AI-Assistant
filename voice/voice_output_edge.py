@@ -43,12 +43,8 @@ async def speak_async(text):
     try:
         import pygame
         
-        # Only call overlay functions if overlay is actually running
-        if OVERLAY_AVAILABLE:
-            try:
-                on_speech_start()
-            except:
-                pass  # Overlay not running, ignore
+        # Note: Avatar control is now done via WebSocket, not direct function calls
+        # This allows overlay to run in separate process
 
         # Stop and unload any previous audio to release the file
         if pygame.mixer.get_init():
@@ -66,19 +62,16 @@ async def speak_async(text):
         pygame.mixer.music.load(OUTPUT_FILE)
         pygame.mixer.music.play()
         
+        print(f"🎵 Audio playback started (duration tracking enabled)")
+        
         # Wait for playback to finish
         while pygame.mixer.music.get_busy():
             pygame.time.Clock().tick(10)
         
+        print(f"🎵 Audio playback finished")
+        
         # Unload the music to release the file
         pygame.mixer.music.unload()
-
-        # Only call overlay functions if overlay is actually running
-        if OVERLAY_AVAILABLE:
-            try:
-                on_speech_end()
-            except:
-                pass  # Overlay not running, ignore
                 
     except Exception as e:
         print(f"❌ Voice output error: {e}")

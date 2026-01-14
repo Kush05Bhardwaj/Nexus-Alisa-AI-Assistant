@@ -137,7 +137,23 @@ async def text_chat():
                 
                 # Speak the cleaned response - runs in its own thread internally
                 if clean_reply.strip():  # Only speak if there's actual text
+                    # Notify overlay to start talking animation
+                    try:
+                        print("📤 Sending [SPEECH_START] to overlay...")
+                        await ws.send("[SPEECH_START]")
+                    except:
+                        pass  # Overlay might not be connected
+                    
+                    print(f"🎤 Speaking: {clean_reply[:50]}...")
                     speak_func(clean_reply)
+                    print("✅ Speech completed")
+                    
+                    # Notify overlay to stop talking animation
+                    try:
+                        print("📤 Sending [SPEECH_END] to overlay...")
+                        await ws.send("[SPEECH_END]")
+                    except:
+                        pass  # Overlay might not be connected
                 
                 print()  # Extra line for readability
 

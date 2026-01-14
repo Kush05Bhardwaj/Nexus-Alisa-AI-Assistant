@@ -1,32 +1,37 @@
 """
-Nexa Assistant - Main Entry Point
+Nexa Assistant - Overlay Entry Point
 Integrates avatar UI with WebSocket client using thread-safe communication
+Also allows voice modules to directly control the avatar
 """
 import threading
 import asyncio
 import tkinter as tk
-from avatar_window import root, run_avatar, start_talking, stop_talking
-from avatar_controller import on_emotion
+from avatar_window import AvatarWindow
+import avatar_controller
 import websockets
 
 WS_URL = "ws://127.0.0.1:8000/ws/chat"
 
 class AvatarApp:
     def __init__(self):
+        self.avatar_window = None
         self.ws_task = None
         self.loop = None
         
     def safe_start_talking(self):
         """Thread-safe way to start talking animation"""
-        root.after(0, start_talking)
+        if self.avatar_window:
+            self.avatar_window.root.after(0, self.avatar_window.start_talking)
     
     def safe_stop_talking(self):
         """Thread-safe way to stop talking animation"""
-        root.after(0, stop_talking)
+        if self.avatar_window:
+            self.avatar_window.root.after(0, self.avatar_window.stop_talking)
     
     def safe_on_emotion(self, emotion: str):
         """Thread-safe way to handle emotion"""
-        root.after(0, lambda: on_emotion(emotion))
+        if self.avatar_window:
+            self.avatar_window.root.after(0, lambda: avatar_controller.on_emotion(emotion))
     
     async def listen_to_backend(self):
         """WebSocket listener running in background thread"""
@@ -37,6 +42,14 @@ class AvatarApp:
                     msg = await ws.recv()
                     
                     if msg == "[END]":
+                        self.safe_stop_talking()
+                    
+                    elif msg == "[SPEECH_START]":
+                        # Text chat is starting to speak
+                        self.safe_start_talking()
+                    
+                    elif msg == "[SPEECH_END]":
+                        # Text chat finished speaking
                         self.safe_stop_talking()
                     
                     elif msg.startswith("[EMOTION]"):
@@ -71,12 +84,21 @@ class AvatarApp:
         print("🤖 Nexa Assistant - Avatar Overlay")
         print("=" * 50)
         
+        # Create avatar window
+        self.avatar_window = AvatarWindow()
+        
+        # Register avatar window with controller so voice modules can control it
+        avatar_controller.set_avatar_window(self.avatar_window)
+        print("🎨 Avatar window registered with controller")
+        
         # Start WebSocket listener in background
         self.start_websocket_thread()
         
         # Run Tkinter UI in main thread
         print("🎨 Starting avatar UI...")
-        run_avatar()
+        print("💡 TIP: Voice output will now trigger avatar animations!")
+        print("💡 Right-click on avatar to close")
+        self.avatar_window.run()
 
 if __name__ == "__main__":
     app = AvatarApp()
