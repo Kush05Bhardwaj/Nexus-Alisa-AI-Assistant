@@ -212,6 +212,7 @@ MIT License - See LICENSE file
 
 ## 🙏 Credits
 
+- **Developer**: [Kush05Bhardwaj](https://github.com/Kush05Bhardwaj)
 - LLM: llama.cpp
 - Voice: Edge TTS, Faster Whisper
 - RVC: Retrieval-based Voice Conversion
@@ -219,7 +220,6 @@ MIT License - See LICENSE file
 
 ---
 
-**Made with ❤️ for Alisa**
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 pip install -r requirements.txt
@@ -415,8 +415,6 @@ MIT License - see LICENSE file for details
 ---
 
 <div align="center">
-
-**Made with ❤️ by the Alisa Assistant Team**
 
 🌟 Star this repo if you like it! 🌟
 
