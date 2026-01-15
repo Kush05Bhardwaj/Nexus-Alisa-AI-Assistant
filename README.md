@@ -386,8 +386,6 @@ python view_history.py --clear
 curl http://127.0.0.1:8000/history/summary
 ```
 
-📖 **Full documentation:** [CONVERSATION_HISTORY.md](CONVERSATION_HISTORY.md)
-
 ---
 
 ## �📄 License
