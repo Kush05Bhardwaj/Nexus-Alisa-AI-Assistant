@@ -2,13 +2,14 @@ from fastapi import WebSocket, WebSocketDisconnect
 from .llm_client import stream_llm_response
 from .memory import MemoryBuffer
 from .memory_long import save_memory, fetch_recent_memories
-from .modes import set_mode, get_mode_prompt
+from .modes import set_mode, get_mode_prompt, current_mode
 from .emotion import extract_emotion
 from .prompt import build_prompt
 from typing import List
 import asyncio
 import time
 import random
+from datetime import datetime
 
 memory = MemoryBuffer()
 
@@ -18,6 +19,7 @@ connected_clients: List[WebSocket] = []
 # Track last user activity for idle thought engine
 last_user_activity = time.time()
 idle_thought_active = False  # Prevent multiple idle thoughts at once
+last_emotion_expressed = "neutral"  # Track Alisa's last emotion
 
 # Vision state tracking
 vision_state = {
@@ -51,8 +53,8 @@ async def broadcast_message(message: str, exclude: WebSocket = None):
             connected_clients.remove(client)
 
 async def trigger_idle_response():
-    """Generate and broadcast an idle thought from Alisa"""
-    global idle_thought_active
+    """Generate and broadcast an idle thought from Alisa with enhanced context awareness"""
+    global idle_thought_active, last_emotion_expressed
     
     if idle_thought_active:
         print("⏸️ Idle thought already in progress, skipping")
@@ -63,19 +65,69 @@ async def trigger_idle_response():
         return
     
     idle_thought_active = True
-    print("💭 Generating idle thought...")
+    print("💭 Generating context-aware idle thought...")
     
     try:
         memories = fetch_recent_memories()
         
-        # Build context with idle hint
-        idle_context = (
-            "The user has been quiet for a while. "
-            "If it feels natural, say something subtle, light, or observational. "
+        # Build enhanced context based on available information
+        context_parts = []
+        
+        # 1. VISION CONTEXT - User presence and attention
+        if vision_state["presence"] == "absent":
+            context_parts.append("The user is not at their computer right now.")
+        elif vision_state["attention"] == "distracted":
+            context_parts.append("The user is looking away from the screen, possibly distracted.")
+        elif vision_state["presence"] == "present" and vision_state["attention"] == "focused":
+            context_parts.append("The user is present but hasn't said anything in a while.")
+        
+        # 2. TIME OF DAY CONTEXT
+        current_hour = datetime.now().hour
+        if 0 <= current_hour < 6:
+            time_context = "It's very late at night (past midnight)."
+            context_parts.append(time_context)
+        elif 6 <= current_hour < 12:
+            time_context = "It's morning time."
+            context_parts.append(time_context)
+        elif 12 <= current_hour < 18:
+            time_context = "It's afternoon."
+            context_parts.append(time_context)
+        elif 18 <= current_hour < 22:
+            time_context = "It's evening."
+            context_parts.append(time_context)
+        else:
+            time_context = "It's late at night."
+            context_parts.append(time_context)
+        
+        # 3. MOOD MEMORY - Check recent conversation tone
+        if memories:
+            # Simple heuristic: if recent memories exist, conversation was active
+            context_parts.append("You were just talking to the user recently.")
+        
+        # 4. CURRENT MODE AWARENESS
+        mode_hints = {
+            "serious": "Keep your tone composed and mature. Don't tease unnecessarily.",
+            "teasing": "You can be playful and lightly teasing if appropriate.",
+            "calm": "Stay soft-spoken and gentle."
+        }
+        mode_hint = mode_hints.get(current_mode, "")
+        if mode_hint:
+            context_parts.append(mode_hint)
+        
+        # 5. EMOTIONAL CONTINUITY - Match or contrast last emotion appropriately
+        if last_emotion_expressed:
+            context_parts.append(f"Your last emotion was {last_emotion_expressed}.")
+        
+        # Build final idle context
+        idle_context = " ".join(context_parts)
+        idle_context += (
+            "\n\nBased on this context, if it feels natural, say something subtle, light, or observational. "
             "Do NOT ask direct questions. "
-            "Keep it short. "
-            "Silence is acceptable."
+            "Keep it very short (1-2 sentences max). "
+            "Silence is acceptable if nothing feels natural to say."
         )
+        
+        print(f"🎯 Context: {idle_context[:100]}...")
         
         system_prompt = build_prompt(
             get_mode_prompt(), 
@@ -95,6 +147,8 @@ async def trigger_idle_response():
             await broadcast_message(token, exclude=None)
         
         emotion, clean_text = extract_emotion(full_response)
+        last_emotion_expressed = emotion  # Track emotion for continuity
+        
         memory.add("assistant", clean_text)
         save_memory(emotion, clean_text)
         
@@ -102,7 +156,7 @@ async def trigger_idle_response():
         await broadcast_message(f"[EMOTION]{emotion}", exclude=None)
         await broadcast_message("[END]", exclude=None)
         
-        print(f"✅ Idle thought sent: {clean_text[:60]}...")
+        print(f"✅ Idle thought sent ({emotion}): {clean_text[:60]}...")
         
     except Exception as e:
         print(f"❌ Error generating idle thought: {e}")
@@ -112,30 +166,74 @@ async def trigger_idle_response():
         idle_thought_active = False
 
 async def idle_thought_loop():
-    """Background task that occasionally triggers idle thoughts"""
+    """Background task that occasionally triggers idle thoughts with smart context awareness"""
     global last_user_activity
     
-    print("🧠 Idle thought engine started")
+    print("🧠 Enhanced idle thought engine started")
     
     while True:
         await asyncio.sleep(30)  # Check every 30 seconds
         
         idle_time = time.time() - last_user_activity
         
-        # Only consider idle after 90 seconds
-        if idle_time < 90:
+        # Base idle time requirement
+        min_idle_time = 90
+        
+        # SMART ADJUSTMENTS based on context
+        
+        # 1. VISION-BASED ADJUSTMENTS
+        if vision_state["presence"] == "absent":
+            # User is away - can speak sooner (they just left)
+            min_idle_time = 60
+        elif vision_state["attention"] == "distracted":
+            # User is distracted - slight chance to get attention
+            min_idle_time = 75
+        
+        # 2. TIME-OF-DAY ADJUSTMENTS
+        current_hour = datetime.now().hour
+        if 0 <= current_hour < 6:
+            # Very late night - be quieter, longer wait
+            min_idle_time = 180  # 3 minutes
+        elif 22 <= current_hour < 24:
+            # Late night - a bit quieter
+            min_idle_time = 120  # 2 minutes
+        
+        # Check if minimum idle time met
+        if idle_time < min_idle_time:
             continue
         
-        # Probability gate: 25% chance when idle
-        # This is CRITICAL to prevent spam
-        if random.random() > 0.25:
+        # SMART PROBABILITY based on context
+        base_probability = 0.25  # 25% default
+        
+        # Adjust probability based on vision state
+        if vision_state["presence"] == "absent":
+            # User just left - higher chance to comment
+            base_probability = 0.40
+        elif vision_state["attention"] == "distracted":
+            # User distracted - moderate chance
+            base_probability = 0.30
+        elif vision_state["presence"] == "present" and vision_state["attention"] == "focused":
+            # User is present and focused but quiet - lower chance
+            base_probability = 0.20
+        
+        # Mode-based adjustment
+        if current_mode == "serious":
+            # Serious mode - less frequent idle chat
+            base_probability *= 0.7
+        elif current_mode == "teasing":
+            # Teasing mode - slightly more frequent
+            base_probability *= 1.1
+        
+        # Probability gate
+        if random.random() > base_probability:
             continue
         
         # Additional check: don't spam if already spoke recently
         if idle_thought_active:
             continue
         
-        # Trigger the idle thought
+        # Trigger the enhanced idle thought
+        print(f"🎯 Triggering idle thought (idle: {idle_time:.0f}s, prob: {base_probability:.0%}, vision: {vision_state['presence']}/{vision_state['attention']})")
         await trigger_idle_response()
 
 async def keepalive_ping(websocket: WebSocket, interval: int = 20):
@@ -151,7 +249,7 @@ async def keepalive_ping(websocket: WebSocket, interval: int = 20):
         pass
 
 async def websocket_chat(websocket: WebSocket):
-    global last_user_activity
+    global last_user_activity, last_emotion_expressed
     
     await websocket.accept()
     connected_clients.append(websocket)
@@ -281,6 +379,7 @@ async def websocket_chat(websocket: WebSocket):
                             await broadcast_message(token, exclude=None)
                         
                         emotion, clean_text = extract_emotion(full_response)
+                        last_emotion_expressed = emotion  # Track for idle continuity
                         memory.add("assistant", clean_text)
                         save_memory(emotion, clean_text)
                         
@@ -357,6 +456,7 @@ async def websocket_chat(websocket: WebSocket):
                     await broadcast_message(token, exclude=websocket)
 
                 emotion, clean_text = extract_emotion(full_response)
+                last_emotion_expressed = emotion  # Track for idle continuity
 
                 memory.add("assistant", clean_text)
                 save_memory(emotion, clean_text)

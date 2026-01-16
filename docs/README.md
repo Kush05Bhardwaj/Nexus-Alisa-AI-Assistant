@@ -1,4 +1,6 @@
-# 📚 Alisa Documentation
+# 📚 Alisa D### Idle Thought System
+- **`IDLE_THOUGHT_GUIDE.md`** - Complete guide with visuals, implementation details, testing, and examples
+- **`IDLE_THOUGHT_ENHANCED.md`** - ⭐ Enhanced v2.0 with context-aware triggers (vision, time, mood, mode, emotion)umentation
 
 This folder contains all the documentation for the Alisa AI Assistant project.
 
@@ -21,12 +23,13 @@ This folder contains all the documentation for the Alisa AI Assistant project.
 3. Review `CODEBASE_STRUCTURE.md` to understand the architecture
 
 ### Understanding Idle Thoughts
-1. Read `IDLE_THOUGHT_GUIDE.md` - Everything you need in one place
-   - Visual diagrams and flowcharts
-   - Implementation details
-   - Configuration and tuning
-   - Testing and troubleshooting
-   - Examples and best practices
+1. Start with `IDLE_THOUGHT_GUIDE.md` - Complete foundation
+2. Read `IDLE_THOUGHT_ENHANCED.md` - New v2.0 features ⭐
+   - Vision-based triggers (user absent/distracted)
+   - Time-of-day awareness
+   - Mood memory integration
+   - Current mode awareness
+   - Emotional continuity tracking
 
 ## 📂 Related Folders
 - **`../scripts/`** - Startup scripts and utilities
