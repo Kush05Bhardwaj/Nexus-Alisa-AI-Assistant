@@ -1,1090 +1,1554 @@
-# 📁 Alisa Assistant - Codebase Structure
+# 📁 Alisa Codebase Structure
 
-Complete documentation of project architecture and file organization.
+Complete file-by-file documentation of the entire Alisa AI Assistant codebase.
 
----
-
-## 📊 Project Overview
-
-**Alisa Assistant** is a modular desktop AI companion with four main components:
-1. **Backend** - FastAPI server with LLM integration and memory
-2. **Overlay** - Animated avatar window with emotion expressions
-3. **Voice** - Speech I/O with TTS, STT, and optional RVC
-4. **Vision** - Presence detection and screen analysis
+**Last Updated:** January 17, 2026  
+**Version:** 3.0 (Phase 10C Complete)
 
 ---
 
-## 🗂️ Directory Structure
+## 📋 Table of Contents
+
+- [Project Root](#project-root)
+- [Backend Module](#backend-module)
+- [Overlay Module](#overlay-module)
+- [Voice Module](#voice-module)
+- [Vision Module](#vision-module)
+- [Scripts Module](#scripts-module)
+- [Documentation](#documentation)
+
+---
+
+## 🏠 Project Root
 
 ```
-NexaAssistant/
-├── backend/                     # FastAPI backend server
-│   ├── app/
-│   │   ├── main.py             # FastAPI entry point & routes
-│   │   ├── ws.py               # WebSocket chat handler
-│   │   ├── llm_client.py       # LLM streaming integration
-│   │   ├── emotion.py          # Emotion extraction from responses
-│   │   ├── memory.py           # Short-term conversation buffer
-│   │   ├── memory_long.py      # SQLite persistent storage
-│   │   ├── prompt.py           # System prompt & personality
-│   │   ├── modes.py            # Conversation mode management
-│   │   ├── db.py               # Database configuration
-│   │   ├── models.py           # SQLAlchemy models
-│   │   └── schemas.py          # Pydantic schemas
-│   ├── requirements.txt
-│   └── README.md               # Backend documentation
-│
-├── overlay/                     # Avatar overlay window
-│   ├── assets/
-│   │   ├── base.png           # Neutral expression
-│   │   ├── happy.png          # Happy expression
-│   │   ├── teasing.png        # Teasing expression
-│   │   ├── serious.png        # Serious expression
-│   │   ├── calm.png           # Calm expression
-│   │   ├── sad.png            # Sad expression
-│   │   ├── eyes_closed.png    # Blinking layer
-│   │   └── mouth_open.png     # Talking layer
-│   ├── main.py                # Entry point & WebSocket client
-│   ├── avatar_window.py       # Tkinter UI & animations
-│   ├── avatar_controller.py   # State management
-│   ├── requirements.txt
-│   └── README.md              # Overlay documentation
-│
-├── voice/                       # Voice I/O system
-│   ├── rvc/                    # RVC voice conversion (optional)
-│   │   ├── inferencer.py      # RVC inference engine
-│   │   ├── weights/           # Model weights (.pth)
-│   │   └── index/             # Feature index (.index)
-│   ├── text_chat_v2.py        # Text input + voice output
-│   ├── voice_chat_optimized.py # Full voice conversation
-│   ├── voice_input.py         # Speech-to-text
-│   ├── voice_output_edge.py   # Edge TTS
-│   ├── voice_output_rvc.py    # Edge TTS + RVC
-│   ├── voice_config.py        # Voice settings
-│   ├── requirements.txt
-│   └── README.md              # Voice documentation
-│
-├── vision/                      # Vision detection system
-│   ├── vision_client.py       # Webcam presence detection
-│   ├── vision_client_screen.py # Screen content analysis
-│   ├── webcam.py              # Webcam capture
-│   ├── face_emotion.py        # Face detection & emotion
-│   ├── screen_capture.py      # Screenshot capture
-│   ├── screen_analyze.py      # Screen analysis
-│   ├── requirements.txt
-│   └── README.md              # Vision documentation
-│
-├── Startup Scripts (PowerShell)
-│   ├── start_backend.ps1      # Start backend server
-│   ├── start_overlay.ps1      # Start avatar overlay
-│   ├── start_text_chat.ps1    # Text chat mode
-│   ├── start_voice.ps1        # Voice chat mode
-│   ├── start_vision.ps1       # Webcam vision
-│   └── start_vision_screen.ps1 # Screen analysis
-│
-├── Documentation
-│   ├── README.md              # Main project README
-│   ├── CODEBASE_STRUCTURE.md  # This file
-│   └── [Module READMEs]       # See each module folder
-│
-└── Data Files
-    ├── alisa_memory.db        # SQLite conversation history
-    └── view_history.py        # View conversation history
+Alisa-AI Assistant/
+├── README.md                               # Main project documentation
+├── LICENSE                                 # Project license
+├── DOCUMENTATION_UPDATE_2026-01-17.md     # Latest update notes
+├── FINAL_DOCUMENTATION_SUMMARY.md         # Documentation summary
+├── VERIFICATION_COMPLETE.md               # Verification status
+├── backend/                               # Backend server module
+├── overlay/                               # Avatar overlay module
+├── voice/                                 # Voice I/O module
+├── vision/                                # Vision detection module
+├── scripts/                               # Startup scripts
+└── docs/                                  # Documentation
 ```
 
----
+### Root Files
 
-## 🔧 Backend Component
+#### `README.md`
+**Purpose:** Main project overview and quick start guide  
+**Contents:**
+- Project description
+- Features overview
+- Quick start guide
+- Architecture overview
+- Module descriptions
+- Setup instructions
+- Contributing guide
 
-### Core Files
+#### `LICENSE`
+**Purpose:** Project licensing information  
+**Type:** [License Type]
 
-**`main.py`** - FastAPI application entry
-- Initializes FastAPI app
-- Configures CORS for WebSocket
-- Health check endpoint (`/`)
-- WebSocket route (`/ws/chat`)
-- Database initialization
+#### `DOCUMENTATION_UPDATE_2026-01-17.md`
+**Purpose:** Latest documentation update log  
+**Contents:**
+- Changes made
+- Files updated
+- New features documented
 
-**`ws.py`** - WebSocket chat handler
-- Manages client connections
-- Handles chat messages
-- Streams LLM responses token-by-token
-- Broadcasts to all clients (chat + overlay)
-- Processes `/mode` commands
-- Manages memory (short + long term)
+#### `FINAL_DOCUMENTATION_SUMMARY.md`
+**Purpose:** Comprehensive documentation summary  
+**Contents:**
+- All modules documented
+- Feature completion status
+- Known issues
 
-**`llm_client.py`** - LLM integration
-- Connects to local LLM server
-- Async token streaming
-- Default: `http://127.0.0.1:8080/v1/chat/completions`
-
-**`emotion.py`** - Emotion extraction
-- Extracts `<emotion=...>` tags from responses
-- Validates emotions
-- Returns clean text + emotion
-
-**`memory.py`** - Short-term memory
-- In-memory conversation buffer
-- Stores ~10 recent messages
-- Fast access for current session
-
-**`memory_long.py`** - Long-term storage
-- SQLite persistent storage
-- Auto-loads last 3000 tokens on startup
-- Token-aware trimming
-- Conversation history management
-
-**`prompt.py`** - System prompt
-- Alisa's personality definition
-- Customizable character traits
-
-**`modes.py`** - Conversation modes
-- `default`, `study`, `chill`, `creative`
-- Mode-specific behaviors
-
-### WebSocket Protocol
-
-**Client → Server:**
-```json
-{"message": "Hello!"}
-{"message": "/mode study"}
-```
-
-**Server → Client:**
-```
-[token]              # Response chunks
-[EMOTION]happy       # Emotion update
-[END]                # Response complete
-[MODE CHANGED]       # Mode switch
-[VISION]data         # Vision updates
-```
+#### `VERIFICATION_COMPLETE.md`
+**Purpose:** Verification checklist  
+**Contents:**
+- Tested features
+- Verification status
+- Known limitations
 
 ---
 
-## 🎭 Overlay Component
+## 🔧 Backend Module
 
-### Core Files
+**Location:** `backend/`  
+**Purpose:** Central server handling LLM, memory, and coordination  
+**Technology:** FastAPI, SQLAlchemy, asyncio
 
-**`main.py`** - Entry point
-- WebSocket client to backend
-- Receives emotion/talk signals
-- Forwards to avatar controller
-
-**`avatar_window.py`** - Tkinter UI
-- Transparent window
-- Image compositing
-- Animation rendering
-- Drag functionality
-
-**`avatar_controller.py`** - Business logic
-- State management
-- Emotion switching
-- Talking animation
-- Blinking animation
-
-### Animation System
-
-**Layers:**
-1. Base (emotion expression)
-2. Eyes (blink overlay)
-3. Mouth (talk overlay)
-
-**Triggers:**
-- `[EMOTION]<name>` - Switch expression
-- `[TALK_START]` - Start mouth animation
-- `[TALK_END]` - Stop mouth animation
-
----
-
-## 🎙️ Voice Component
-
-### Core Files
-
-**`text_chat_v2.py`** - Text + voice mode
-- Text input from terminal
-- Voice output via Edge TTS
-- WebSocket backend communication
-
-**`voice_chat_optimized.py`** - Full voice mode
-- Speech input via Whisper
-- Voice output via Edge TTS
-- Continuous conversation loop
-
-**`voice_input.py`** - Speech-to-text
-- Faster Whisper integration
-- Microphone recording
-- Models: tiny, base, small, medium, large
-
-**`voice_output_edge.py`** - Edge TTS
-- Microsoft Edge TTS API
-- Multiple voice options
-- Customizable rate/pitch
-
-**`voice_output_rvc.py`** - Edge TTS + RVC
-- RVC voice conversion
-- Custom anime voice
-- Pitch shifting
-
-**`voice_config.py`** - Settings
-- Voice selection
-- Speech rate/pitch
-- RVC parameters
-
-### RVC Structure
-
-**`rvc/inferencer.py`** - RVC engine
-**`rvc/weights/`** - Model files (.pth)
-**`rvc/index/`** - Feature index (.index)
-
----
-
-## 👁️ Vision Component
-
-### Core Files
-
-**`vision_client.py`** - Webcam mode
-- Face detection
-- Presence tracking
-- Attention estimation
-- Sends updates to backend
-
-**`vision_client_screen.py`** - Screen mode
-- Screenshot capture
-- Content analysis
-- Context understanding
-
-**`webcam.py`** - Camera capture
-- OpenCV webcam interface
-- Frame processing
-- Face detection
-
-**`face_emotion.py`** - Emotion detection
-- Haar Cascade face detection
-- Basic emotion estimation
-- Ready for CNN integration
-
-**`screen_capture.py`** - Screenshot
-- Screen capture utility
-- Multi-monitor support
-
-**`screen_analyze.py`** - Analysis
-- Screen content understanding
-- Application detection
-
----
-
-## 🚀 Startup Scripts
-
-**`start_backend.ps1`**
-- Activates venv
-- Starts uvicorn server
-
-**`start_overlay.ps1`**
-- Starts avatar overlay
-
-**`start_text_chat.ps1`**
-- Starts text chat with voice
-
-**`start_voice.ps1`**
-- Starts full voice conversation
-
-**`start_vision.ps1`**
-- Starts webcam vision
-
-**`start_vision_screen.ps1`**
-- Starts screen analysis
-
----
-
-## 💾 Data Files
-
-**`alisa_memory.db`** - SQLite database
-- Conversation history
-- Auto-created on first run
-- Persistent across sessions
-
-**`view_history.py`** - Utility script
-- View conversation history
-- Debug memory system
-
----
-
-## 🔄 Communication Flow
+### Structure
 
 ```
-User Input
-    ↓
-Voice/Text Client → WebSocket → Backend → LLM Server
-                        ↓
-                   Broadcast
-                    ↙    ↘
-            Client      Overlay
-            (voice)     (animation)
+backend/
+├── app/
+│   ├── __init__.py
+│   ├── main.py
+│   ├── ws.py
+│   ├── llm_client.py
+│   ├── memory.py
+│   ├── memory_long.py
+│   ├── emotion.py
+│   ├── modes.py
+│   ├── prompt.py
+│   ├── idle_companion.py
+│   ├── desktop_actions.py
+│   ├── task_memory.py
+│   ├── db.py
+│   ├── models.py
+│   ├── schemas.py
+│   └── __pycache__/
+├── alisa_memory.db
+├── requirements.txt
+└── README.md
 ```
 
----
+### Files
 
-## 📦 Dependencies
+#### `app/__init__.py`
+**Purpose:** Package initialization  
+**Contents:** Empty (marks directory as Python package)
 
-### Backend
-- fastapi, uvicorn
-- websockets
-- sqlalchemy
-- aiohttp
-- pydantic
-
-### Overlay
-- tkinter (built-in)
-- Pillow
-- websockets
-
-### Voice
-- faster-whisper
-- edge-tts
-- sounddevice
-- soundfile
-- websockets
-
-### Vision
-- opencv-python
-- numpy
-- Pillow
-- websockets
-- mss (for screen capture)
-
----
-
-## 🎯 Key Features by Component
-
-**Backend:**
-- LLM streaming
-- Persistent memory
-- Emotion detection
-- Multi-mode conversations
-- WebSocket broadcasting
-
-**Overlay:**
-- 6 emotion expressions
-- Smooth animations
-- Transparent window
-- Audio-synced mouth
-
-**Voice:**
-- Speech-to-text (Whisper)
-- Text-to-speech (Edge TTS)
-- RVC voice conversion
-- Multiple voices
-
-**Vision:**
-- Presence detection
-- Attention tracking
-- Face emotion estimation
-- Screen analysis
-
----
-
-For detailed module documentation, see:
-- [Backend README](backend/README.md)
-- [Overlay README](overlay/README.md)
-- [Voice README](voice/README.md)
-- [Vision README](vision/README.md)
-```
-
----
-
-#### `backend/app/memory_long.py` 💾
-**Purpose:** Long-term memory persistence (SQLite database)
-
-**Features:**
-- Saves conversations to database
-- Retrieves recent memories
-- Associates emotions with messages
-
-**Key Functions:**
+#### `app/main.py`
+**Purpose:** FastAPI application entry point  
+**Key Components:**
 ```python
-save_memory(emotion: str, text: str)     # Save to DB
-fetch_recent_memories(limit: int) -> list # Retrieve memories
+app = FastAPI()  # Main app instance
+startup_event()  # Database initialization
+shutdown_event()  # Cleanup
+health_check()   # GET /
+history_summary()  # GET /history/summary
+clear_history()  # POST /history/clear
 ```
+**Dependencies:** FastAPI, CORS middleware  
+**Lines:** ~60
 
-**Database Schema:**
-- Table: `memories`
-- Fields: `id`, `emotion`, `text`, `timestamp`
-
----
-
-#### `backend/app/prompt.py` 📝
-**Purpose:** System prompt and character personality
-
-**Content:**
-- Alisa's personality definition
-- Tsundere character traits
-- Conversation guidelines
-- Emotion usage examples
-
-**Key Function:**
+#### `app/ws.py`
+**Purpose:** WebSocket handler and idle thought engine  
+**Key Components:**
 ```python
-def build_prompt(mode: str, memories: list) -> list[dict]:
-    # Returns messages array with system prompt
+connected_clients: List[WebSocket]  # Active connections
+vision_state: Dict  # Vision system state
+broadcast_message()  # Send to all clients
+trigger_idle_response()  # Phase 9B idle thoughts
+idle_thought_loop()  # Background task (30s interval)
+chat_endpoint()  # WebSocket /ws/chat
 ```
+**Dependencies:** websockets, llm_client, memory, idle_companion, desktop_actions, task_memory  
+**Lines:** ~834
 
-**Personality Highlights:**
-- Tsundere anime-style character
-- Caring but hides it with teasing
-- Uses emotion tags in responses
-- Adapts to different conversation modes
-
----
-
-#### `backend/app/modes.py` 🎭
-**Purpose:** Conversation mode management
-
-**Available Modes:**
-- `default` - Standard tsundere personality
-- `study` - Focused, educational assistant
-- `chill` - Relaxed, casual conversation
-- `creative` - Imaginative, storytelling mode
-
-**Key Functions:**
+#### `app/llm_client.py`
+**Purpose:** LLM streaming integration  
+**Key Components:**
 ```python
-set_mode(mode_name: str) -> bool       # Switch mode
-get_mode_prompt() -> str                # Get current mode prompt
+LLM_URL = "http://127.0.0.1:8080/v1/chat/completions"
+
+async def stream_llm_response(messages):
+    # HTTP streaming with httpx
+    # Yields tokens one by one
+    # Returns generator
 ```
+**Dependencies:** httpx  
+**Lines:** ~30
 
-**Mode Switching:**
-- User types `/mode study` in chat
-- Backend switches personality
-- Returns `[MODE CHANGED]` message
-
----
-
-#### `backend/app/db.py` 🗄️
-**Purpose:** Database configuration and initialization
-
-**Features:**
-- SQLAlchemy engine setup
-- Session management
-- Database initialization
-- Table creation
-
-**Database:** SQLite (`alisa_memory.db`)
-
----
-
-#### `backend/app/models.py` 📋
-**Purpose:** SQLAlchemy ORM models
-
-**Models:**
-- `Memory` - Long-term memory storage
-  - `id`: Integer primary key
-  - `emotion`: String
-  - `text`: String
-  - `timestamp`: DateTime
-
----
-
-#### `backend/app/schemas.py` 📋
-**Purpose:** Pydantic data validation schemas
-
-**Schemas:**
-- `MemoryCreate` - Validate new memories
-- `MemoryResponse` - Format memory responses
-
----
-
-## 📘 Overlay Component Details
-
-### `overlay/main.py` ⭐
-**Purpose:** Overlay entry point and WebSocket client
-
-**Key Features:**
-- Connects to backend WebSocket (`ws://127.0.0.1:8000/ws/chat`)
-- Listens for broadcasted messages
-- Updates avatar state based on messages
-- Runs in background thread (async)
-- Thread-safe UI updates via `root.after()`
-
-**Message Handling:**
+#### `app/memory.py`
+**Purpose:** Short-term in-memory conversation buffer  
+**Key Components:**
 ```python
-[token]         → Start talking animation
-[END]           → Stop talking animation
-[EMOTION]emotion → Update emotion (future feature)
+class MemoryBuffer:
+    max_turns: int = 10
+    max_tokens: int = 3000
+    session_id: str
+    messages: List[Dict]
+    
+    _load_from_db()  # Load on init
+    add(role, content)  # Add + persist
+    _trim_by_tokens()  # Auto-trim
+    get()  # Return messages
+    clear()  # Reset buffer
 ```
+**Dependencies:** db, models, datetime  
+**Lines:** ~104
 
-**Architecture:**
-```
-Background Thread (async):
-  WebSocket Client → Message Queue
-
-Main Thread (Tkinter):
-  Avatar Window → Animation Loop
-```
-
----
-
-### `overlay/avatar_window.py` 🖼️
-**Purpose:** Tkinter UI and animation rendering
-
-**Key Features:**
-- Transparent, always-on-top window
-- Draggable avatar
-- Layered image system (base + eyes + mouth)
-- Talking animation (mouth flap)
-- Blinking animation (periodic)
-- Right-click to close
-
-**Image Layers:**
-1. **Base** - Main avatar image
-2. **Eyes Closed** - Blinking overlay
-3. **Mouth Open** - Talking overlay
-
-**Animations:**
-- **Talking:** Toggles mouth layer rapidly
-- **Blinking:** Closes eyes briefly every 3-5 seconds
-
-**Key Methods:**
+#### `app/memory_long.py`
+**Purpose:** SQLite persistent storage  
+**Key Components:**
 ```python
-start_talking()  # Begin mouth animation
-stop_talking()   # End mouth animation
-_animate()       # Main animation loop
-_blink()         # Blinking timer
+def save_memory(emotion, content):
+    # Save to database
+    
+def fetch_recent_memories(limit=10):
+    # Query recent entries
+    # Return as formatted string
+    
+def clear_history():
+    # Delete all entries
 ```
+**Dependencies:** db, models  
+**Lines:** ~50
 
----
-
-### `overlay/avatar_controller.py` 🎮
-**Purpose:** Business logic and state management
-
-**Key Features:**
-- Exposes simple API for main.py
-- Manages avatar state (talking/idle)
-- Thread-safe state updates
-
-**API:**
+#### `app/emotion.py`
+**Purpose:** Extract emotion tags from LLM output  
+**Key Components:**
 ```python
-on_speech_start()  # Called when LLM starts responding
-on_speech_end()    # Called when LLM finishes
+def extract_emotion(text: str) -> Tuple[str, str]:
+    # Pattern 1: <emotion=name>text
+    # Pattern 2: emotion word at start
+    # Pattern 3: Broken (just emotion word)
+    # Fallback: neutral
+    # Returns: (emotion, clean_text)
 ```
+**Valid Emotions:** teasing, calm, serious, happy, sad, neutral  
+**Lines:** ~44
 
-**State Management:**
-- `talking` - Boolean flag
-- Prevents state conflicts
-
----
-
-### `overlay/assets/` 🎨
-**Purpose:** Avatar image resources
-
-**Required Files:**
-- `base.png` - Main avatar image (transparent background)
-- `eyes_closed.png` - Eyes closed overlay
-- `mouth_open.png` - Mouth open overlay
-
-**Image Requirements:**
-- PNG format with transparency
-- Same dimensions (e.g., 400x400px)
-- Aligned so overlays match base image
-
----
-
-## 📘 Voice Component Details
-
-### `voice/text_chat.py` ⭐
-**Purpose:** Text input + voice output chat mode
-
-**Use Case:** Type messages, hear voice responses (no microphone needed)
-
-**Key Features:**
-- Connects to backend WebSocket
-- Displays streaming text responses
-- Removes emotion tags before speaking
-- Broadcasts to overlay for animations
-- Chooses best available voice module
-
-**Voice Priority:**
-1. `voice_output_edge.py` (Edge TTS - recommended)
-2. `voice_output_rvc.py` (Edge TTS + RVC)
-3. `voice_output.py` (pyttsx3 fallback)
-
-**Text Cleaning:**
+#### `app/modes.py`
+**Purpose:** Conversation mode management  
+**Key Components:**
 ```python
-def clean_text_for_speech(text: str) -> str:
-    # Removes <emotion=...> tags
-    # Removes emotion words from start
-    # Returns clean text for TTS
-```
-
-**Commands:**
-- `/mode <name>` - Change conversation mode
-- `exit` / `quit` - End chat
-
----
-
-### `voice/voice_chat.py` ⭐
-**Purpose:** Full voice input/output chat
-
-**Use Case:** Speak to Alisa, hear voice responses
-
-**Key Features:**
-- Voice input via Whisper STT
-- Voice output via Edge TTS or RVC
-- WebSocket integration
-- Push-to-talk or continuous listening
-
-**Dependencies:**
-- `voice_input.py` - Speech recognition
-- `voice_output_edge.py` - TTS output
-
----
-
-### `voice/voice_input.py` 🎤
-**Purpose:** Speech-to-text using Whisper
-
-**Key Features:**
-- Records audio from microphone
-- Uses faster-whisper for transcription
-- Configurable model size
-- Noise filtering
-
-**Key Function:**
-```python
-def listen() -> str:
-    # Returns transcribed text
-```
-
-**Whisper Models:**
-- `tiny` - Fastest, less accurate
-- `base` - Balanced (default)
-- `small` - Better accuracy
-- `medium` - High accuracy, slower
-
----
-
-### `voice/voice_output.py` 🔊
-**Purpose:** Basic TTS fallback (pyttsx3)
-
-**Use Case:** When Edge TTS or RVC is unavailable
-
-**Key Features:**
-- Uses Windows built-in voices
-- Selects female voice if available
-- Fast, no internet required
-- Lower quality than Edge TTS
-
-**Key Function:**
-```python
-def speak(text: str):
-    # Speaks using pyttsx3
-```
-
----
-
-### `voice/voice_output_edge.py` 🔊 (Recommended)
-**Purpose:** High-quality TTS using Edge TTS
-
-**Key Features:**
-- Uses Microsoft Edge TTS API (free)
-- Natural-sounding voices
-- Customizable voice selection
-- Configurable pitch and speech rate
-- Saves audio as MP3
-- Plays with pygame mixer
-
-**Voice Selection:**
-- Configured in `voice_config.py`
-- Default: `en-US-AnaNeural` (young, energetic)
-- Supports multiple languages
-
-**Key Function:**
-```python
-async def speak_async(text: str):
-    # Generates and plays TTS audio
-```
-
-**Process:**
-1. Generate MP3 with Edge TTS
-2. Save to `alisa_voice.mp3`
-3. Play with pygame
-4. Trigger overlay animations
-
----
-
-### `voice/voice_output_rvc.py` 🔊
-**Purpose:** Edge TTS + RVC voice conversion
-
-**Use Case:** Convert Edge TTS to custom trained anime voice
-
-**Key Features:**
-- Uses Edge TTS as base
-- Applies RVC voice conversion
-- Customizable voice model
-- Higher quality, more processing
-
-**Requirements:**
-- RVC model weights in `rvc/weights/alisa.pth`
-- RVC index in `rvc/index/alisa.index`
-
-**Key Function:**
-```python
-def speak(text: str):
-    # TTS → RVC conversion → playback
-```
-
-**Process:**
-1. Generate TTS (`base.wav`)
-2. Convert with RVC (`alisa.wav`)
-3. Play converted audio
-4. Trigger overlay animations
-
----
-
-### `voice/rvc/inferencer.py` 🔄
-**Purpose:** RVC voice conversion engine
-
-**Key Features:**
-- Loads RVC model and index
-- Performs voice conversion
-- Pitch shifting
-- Feature extraction
-
-**Key Function:**
-```python
-def convert(input_wav: str, output_wav: str):
-    # Converts voice using RVC model
-```
-
-**Configuration:**
-- Model path: `rvc/weights/alisa.pth`
-- Index path: `rvc/index/alisa.index`
-- Pitch shift: configurable
-- F0 method: harvest/crepe
-
----
-
-### `voice/voice_config.py` ⚙️
-**Purpose:** Voice settings and customization
-
-**Configurable Options:**
-
-```python
-# Voice selection
-SELECTED_VOICE = "ana"  # ana, nanami, xiaoxiao, etc.
-
-# TTS prosody
-SPEECH_RATE = "+15%"    # Speed
-PITCH_SHIFT = "+10Hz"   # Pitch
-
-# Emotion-based prosody (future)
-EMOTION_PROSODY = {
-    "happy": {"rate": "+15%", "pitch": "+8Hz"},
-    "sad": {"rate": "-10%", "pitch": "-5Hz"},
-    ...
+MODES = {
+    "teasing": "You tease gently and act playful.",
+    "serious": "You are calm, mature, and direct.",
+    "calm": "You speak softly and reassuringly."
 }
+
+current_mode = "teasing"
+
+def set_mode(mode): ...
+def get_mode_prompt(): ...
 ```
+**Lines:** ~12
 
-**Available Voices:**
-- **English:** `ana`, `jenny`, `aria`, `michelle`
-- **Japanese:** `nanami`, `aoi`
-- **Chinese:** `xiaoxiao`, `xiaoyi`
-
-**Key Function:**
+#### `app/prompt.py`
+**Purpose:** System prompt and personality definition  
+**Key Components:**
 ```python
-def get_voice() -> str:
-    # Returns Edge TTS voice ID
+SYSTEM_PROMPT = """
+Your name is Alisa.
+[Comprehensive personality definition]
+- Tsundere girlfriend character
+- Emotional behavior rules
+- Speech style guidelines
+- Idle behavior rules
+- Output constraints
+- Emotion tagging instructions
+"""
+
+def build_prompt(mode_prompt, memories, vision_context=""):
+    # Combine system + mode + memories + vision
+    # Return complete prompt
 ```
+**Lines:** ~199
 
----
-
-## 📘 Startup Scripts
-
-### `start_backend.ps1` 🚀
-**Purpose:** Start FastAPI backend server
-
-**What It Does:**
-1. Activates virtual environment
-2. Changes to backend directory
-3. Runs `uvicorn app.main:app --reload`
-
-**Port:** 8000
-**Auto-reload:** Enabled (for development)
-
----
-
-### `start_overlay.ps1` 🚀
-**Purpose:** Start avatar overlay window
-
-**What It Does:**
-1. Activates virtual environment
-2. Changes to overlay directory
-3. Runs `python main.py`
-
-**Requires:** Backend running on port 8000
-
----
-
-### `start_text_chat.ps1` 🚀
-**Purpose:** Start text chat with voice output
-
-**What It Does:**
-1. Activates virtual environment
-2. Changes to voice directory
-3. Runs `python text_chat.py`
-
-**Requires:** Backend running
-**Optional:** Overlay running (for avatar animations)
-
----
-
-### `start_voice.ps1` 🚀
-**Purpose:** Start voice chat mode
-
-**What It Does:**
-1. Activates virtual environment
-2. Changes to voice directory
-3. Runs `python voice_chat.py`
-
-**Requires:**
-- Backend running
-- Microphone available
-- Whisper model downloaded
-
----
-
-## 🔗 Component Interactions
-
-### Full System Flow
-
-```
-┌─────────────┐
-│    User     │
-└──────┬──────┘
-       │ (types/speaks)
-       ▼
-┌─────────────────────┐
-│   Chat Client       │
-│  (text_chat.py)     │
-│  (voice_chat.py)    │
-└──────┬──────────────┘
-       │ WebSocket
-       ▼
-┌─────────────────────┐         ┌──────────────┐
-│  Backend Server     │◄───────►│ LLM Server   │
-│  (main.py/ws.py)    │ HTTP    │ (llama.cpp)  │
-└──────┬──────────────┘         └──────────────┘
-       │ Broadcast
-       ├─────────────┐
-       ▼             ▼
-┌─────────────┐ ┌──────────────┐
-│ Chat Client │ │   Overlay    │
-│  (receives) │ │ (animations) │
-└──────┬──────┘ └──────────────┘
-       │
-       ▼
-┌─────────────┐
-│   Voice     │
-│  (speaks)   │
-└─────────────┘
-```
-
-### WebSocket Message Flow
-
-```
-User Input → Backend → LLM → Backend
-                              ↓
-                      Broadcast to ALL:
-                      ├─→ Chat Client (displays + speaks)
-                      └─→ Overlay (animates)
-```
-
-### Startup Sequence
-
-**Recommended Order:**
-1. **Backend** (`start_backend.ps1`) - Must be first
-2. **Overlay** (`start_overlay.ps1`) - Optional, for avatar
-3. **Chat Client** (`start_text_chat.ps1` or `start_voice.ps1`)
-
-**Minimum:**
-- Backend + Chat Client (no avatar)
-
-**Full Experience:**
-- Backend + Overlay + Chat Client
-
----
-
-## 🛠️ Development Guide
-
-### Adding New Features
-
-#### Add New Emotion
-1. Edit `backend/app/emotion.py` - Add to `ALLOWED_EMOTIONS`
-2. Edit `backend/app/prompt.py` - Document in system prompt
-3. Edit `voice/text_chat.py` - Add to emotion cleaning list
-4. Edit `overlay/avatar_window.py` - Add emotion expression (future)
-
-#### Add New Voice
-1. Edit `voice/voice_config.py` - Add to `VOICE_OPTIONS`
-2. Test with `python voice/test_voice.py`
-
-#### Add New Conversation Mode
-1. Edit `backend/app/modes.py` - Add mode definition
-2. Edit `backend/app/prompt.py` - Add mode-specific prompt
-3. Test with `/mode <new_mode>` command
-
-### Code Style
-- **Backend:** FastAPI async patterns
-- **Overlay:** Tkinter main thread safety
-- **Voice:** Thread-safe audio handling
-- **Comments:** Emoji + clear descriptions
-
-### Testing
-- **Backend:** Run backend, test with WebSocket client
-- **Overlay:** Run overlay, check animations
-- **Voice:** Run `test_voice.py` for voice testing
-- **Integration:** Run full stack, test all features
-
----
-
-## 📚 External Dependencies
-
-### Backend
-- FastAPI - Web framework
-- Uvicorn - ASGI server
-- SQLAlchemy - ORM
-- Pydantic - Validation
-- httpx - HTTP client
-- websockets - WebSocket server
-
-### Overlay
-- Pillow (PIL) - Image handling
-- websockets - WebSocket client
-
-### Voice
-- edge-tts - Microsoft Edge TTS
-- faster-whisper - Speech recognition
-- sounddevice - Audio input
-- pygame - Audio playback
-- soundfile - Audio file handling
-- librosa - Audio processing (RVC)
-- scipy - Signal processing (RVC)
-
-### RVC (Optional)
-- torch - Deep learning
-- fairseq - RVC models
-- librosa - Audio features
-- scipy - Signal processing
-
----
-
-## 🔧 Configuration Files
-
-### `backend/app/llm_client.py`
+#### `app/idle_companion.py`
+**Purpose:** Phase 9B - Spontaneous behavior system  
+**Key Components:**
 ```python
-LLM_API_URL = "http://127.0.0.1:8080/v1/chat/completions"
-MODEL_NAME = "your-model-name"
+class IdleCompanionSystem:
+    last_spontaneous_speech: float
+    silence_start: float
+    companion_mode_active: bool
+    
+    MIN_SILENCE_FOR_SPEECH = {
+        "short": 120,    # 2 min
+        "medium": 300,   # 5 min
+        "long": 600,     # 10 min
+        "very_long": 1800  # 30 min
+    }
+    
+    BASE_PROBABILITY = {
+        "short": 0.08,
+        "medium": 0.15,
+        "long": 0.25,
+        "very_long": 0.40
+    }
+    
+    should_speak_spontaneously()  # Decision logic
+    build_companion_prompt()  # Context-aware prompt
+    get_silence_category()  # Categorize silence
+```
+**Lines:** ~365
+
+#### `app/desktop_actions.py`
+**Purpose:** Phase 10B - Desktop automation system  
+**Key Components:**
+```python
+class DesktopActionsSystem:
+    app_paths: Dict  # Common app paths
+    pending_action: Optional[Dict]
+    actions_this_session: List
+    
+    # Action methods
+    open_app(app_name)
+    close_app(app_name)
+    browser_tab(action, url)
+    type_text(text)
+    press_key(key)
+    click(x, y)
+    scroll(direction, amount)
+    read_file(path)
+    write_note(content, path)
+    
+    # Safety
+    is_action_safe(action_type, params)
+    # Command blacklist
+    # Path restrictions
+    # Rate limiting
+```
+**Dependencies:** pyautogui, psutil, subprocess  
+**Lines:** ~509
+
+#### `app/task_memory.py`
+**Purpose:** Phase 10C - Habit learning system  
+**Key Components:**
+```python
+class TaskMemorySystem:
+    storage_path: Path
+    work_schedule: Dict  # hour → timestamps
+    app_usage: Dict  # task → app → count
+    silence_preferences: Dict  # hour → durations
+    repeated_tasks: Dict  # task → count
+    task_sequences: List
+    
+    # Observation
+    observe_activity(activity_type, context)
+    observe_silence(duration_minutes)
+    
+    # Analysis
+    analyze_work_schedule()
+    detect_silence_patterns()
+    identify_task_sequences()
+    
+    # Decision
+    should_interrupt_now()  # Based on patterns
+    get_typical_work_hours()
+    
+    # Persistence
+    save_memory()
+    load_memory()
+```
+**Dependencies:** json, time, datetime, collections  
+**Lines:** ~438
+
+#### `app/db.py`
+**Purpose:** Database configuration  
+**Key Components:**
+```python
+DATABASE_URL = "sqlite:///alisa_memory.db"
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(bind=engine)
+Base = declarative_base()
+```
+**Lines:** ~7
+
+#### `app/models.py`
+**Purpose:** SQLAlchemy ORM models  
+**Key Components:**
+```python
+class Memory(Base):
+    __tablename__ = "memory"
+    id: Integer (PK)
+    emotion: String
+    content: Text
+
+class ConversationHistory(Base):
+    __tablename__ = "conversation_history"
+    id: Integer (PK, indexed)
+    role: String (user/assistant)
+    content: Text
+    timestamp: DateTime
+    session_id: String
+```
+**Lines:** ~19
+
+#### `app/schemas.py`
+**Purpose:** Pydantic validation schemas  
+**Key Components:**
+```python
+class MessageRequest(BaseModel):
+    message: str
+
+class HistorySummary(BaseModel):
+    messages: int
+    turns: int
+    estimated_tokens: int
+    session_id: str
+```
+**Lines:** ~15
+
+#### `alisa_memory.db`
+**Purpose:** SQLite database file (auto-created)  
+**Schema:** See models.py  
+**Size:** Grows with conversation history
+
+#### `requirements.txt`
+**Purpose:** Python dependencies  
+**Contents:**
+```
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+websockets==12.0
+aiohttp==3.9.1
+pydantic==2.5.0
+python-multipart==0.0.6
+httpx
+python-dotenv
+pyautogui
+psutil
 ```
 
-### `voice/voice_config.py`
+#### `README.md`
+**Purpose:** Backend module documentation  
+**Sections:**
+- Overview
+- Quick start
+- Structure
+- API endpoints
+- WebSocket protocol
+- Memory system
+- Phase 9B/10A/10B/10C documentation
+- Configuration
+- Troubleshooting
+**Lines:** 681
+
+---
+
+## 🎭 Overlay Module
+
+**Location:** `overlay/`  
+**Purpose:** Animated avatar window with emotions  
+**Technology:** Tkinter, PIL, WebSocket
+
+### Structure
+
+```
+overlay/
+├── main.py
+├── avatar_window.py
+├── avatar_controller.py
+├── check_images.py
+├── test_animations.py
+├── assets/
+│   ├── base.png
+│   ├── happy.png
+│   ├── teasing.png
+│   ├── serious.png
+│   ├── calm.png
+│   ├── sad.png
+│   ├── eyes_closed.png
+│   └── mouth_open.png
+├── requirements.txt
+└── README.md
+```
+
+### Files
+
+#### `main.py`
+**Purpose:** Entry point and WebSocket client  
+**Key Components:**
 ```python
+class AvatarApp:
+    ws_task: Optional[Task]
+    loop: Optional[EventLoop]
+    
+    safe_start_talking()  # Thread-safe
+    safe_stop_talking()
+    safe_on_emotion(emotion)
+    
+    listen_to_backend()  # Async WebSocket listener
+    start_websocket_thread()  # Background thread
+    run()  # Main entry point
+```
+**Message Handling:**
+- `[SPEECH_START]` → Start mouth animation
+- `[SPEECH_END]` → Stop mouth animation
+- `[EMOTION]name` → Change facial expression
+- `[END]` → Ignored
+- Tokens → Ignored
+**Lines:** ~133
+
+#### `avatar_window.py`
+**Purpose:** Tkinter UI and animation logic  
+**Key Components:**
+```python
+# Global state
+faces: Dict[str, ImageTk]  # Loaded emotion images
+current_face: str = "neutral"
+is_talking: bool = False
+is_blinking: bool = False
+talking_timeout_id: Optional[str]
+
+# Window config
+WINDOW_SIZE = 400
+root: Tk
+canvas: Canvas
+base_layer: int  # Canvas image ID
+overlay_layer: int
+
+# Functions
+initialize()  # Create window, load images
+animate_blink()  # 3s interval, 150ms duration
+animate_mouth()  # 500ms cycle when talking
+set_emotion(emotion)  # Switch base image
+start_talking()  # Set flag, start animation
+stop_talking()  # Clear flag, return to neutral
+run()  # Main loop
+```
+**Animations:**
+- Blinking: Every 3 seconds, pauses during talking
+- Talking: 200ms open, 300ms closed, loops
+- Safety: 30-second auto-timeout
+**Lines:** ~204
+
+#### `avatar_controller.py`
+**Purpose:** Thread-safe API for external control  
+**Key Components:**
+```python
+_last_emotion: str = "neutral"
+
+def on_speech_start():
+    start_talking()
+
+def on_speech_end():
+    stop_talking()
+
+def on_emotion(emotion: str):
+    # Track and set emotion
+    set_emotion(emotion)
+```
+**Usage:** Import from voice modules for direct control  
+**Lines:** ~27
+
+#### `check_images.py`
+**Purpose:** Verify asset integrity  
+**Key Components:**
+```python
+def check_image(name):
+    # Load image
+    # Check mode (RGBA)
+    # Check transparency
+    # Check visible content
+    # Print report
+```
+**Usage:** `python check_images.py`  
+**Lines:** ~28
+
+#### `test_animations.py`
+**Purpose:** Manual animation testing  
+**Key Components:**
+```python
+def test_emotions():
+    # Cycle through all 6 emotions (2s each)
+
+def test_talking():
+    # Test mouth animation (5s)
+
+def run_tests():
+    # Schedule and run all tests
+```
+**Usage:** `python test_animations.py`  
+**Lines:** ~52
+
+#### `assets/` Directory
+**Purpose:** Avatar image assets  
+**Format:** PNG with RGBA (transparency)  
+**Size:** 400x400 pixels (recommended)
+
+**Files:**
+- `base.png` - Neutral expression (default)
+- `happy.png` - Happy/cheerful expression
+- `teasing.png` - Playful/mischievous expression
+- `serious.png` - Focused/mature expression
+- `calm.png` - Peaceful/relaxed expression
+- `sad.png` - Sad/empathetic expression
+- `eyes_closed.png` - Blinking overlay (aligned to eyes)
+- `mouth_open.png` - Talking overlay (aligned to mouth)
+
+#### `requirements.txt`
+**Contents:**
+```
+pillow>=10.0.0
+websockets>=12.0
+```
+
+#### `README.md`
+**Purpose:** Overlay module documentation  
+**Sections:**
+- Overview
+- Quick start
+- Emotion system
+- Animation system
+- WebSocket protocol
+- Thread-safe architecture
+- Customization
+- Troubleshooting
+**Lines:** 663
+
+---
+
+## 🎙️ Voice Module
+
+**Location:** `voice/`  
+**Purpose:** Speech recognition and synthesis  
+**Technology:** Faster Whisper, Edge TTS, PyGame
+
+### Structure
+
+```
+voice/
+├── text_chat.py
+├── voice_chat_optimized.py
+├── voice_input.py
+├── voice_output_edge.py
+├── voice_output_rvc.py
+├── voice_config.py
+├── install_voice.ps1
+├── rvc/
+│   ├── inferencer.py
+│   ├── weights/
+│   └── index/
+├── requirements.txt
+└── README.md
+```
+
+### Files
+
+#### `text_chat.py`
+**Purpose:** Text input + voice output interface  
+**Key Components:**
+```python
+WS_URL = "ws://127.0.0.1:8000/ws/chat"
+VOICE = get_voice()  # From config
+SPEECH_RATE = "+10%"
+PITCH_SHIFT = "+5Hz"
+
+async def speak_with_timing(text, ws):
+    # Generate TTS to temp file
+    # Load into PyGame
+    # Start playback
+    # Send [SPEECH_START]
+    # Wait for completion
+    # Send [SPEECH_END]
+    # Cleanup temp file
+
+def clean_text_for_speech(text: str):
+    # Remove <emotion=> tags
+    # Remove standalone emotion words
+    # Clean whitespace
+    # Return clean text
+
+async def text_chat():
+    # Connect WebSocket
+    # Read user input
+    # Send to backend
+    # Collect response tokens
+    # Extract emotion
+    # Clean text
+    # Speak with timing
+    # Loop
+```
+**Features:**
+- Precise timing sync with overlay
+- Emotion text cleaning
+- Temporary file cleanup
+- Error handling
+**Lines:** ~255
+
+#### `voice_chat_optimized.py`
+**Purpose:** Full voice conversation interface  
+**Key Components:**
+```python
+EMOTION_EMOJI = {
+    'happy': '😊',
+    'calm': '😌',
+    'teasing': '😏',
+    # ...
+}
+
+async def speak_with_timing(text, ws):
+    # Same as text_chat.py
+    # Generate → Play → Signal
+
+async def listen_for_messages(ws):
+    # Background task
+    # Collect full message
+    # Display with emoji
+    # Speak response
+
+async def voice_input_loop(ws):
+    # Wait for Enter press
+    # Record audio
+    # Transcribe
+    # Send to backend
+
+async def voice_chat():
+    # Connect WebSocket
+    # Start message listener (background)
+    # Run voice input loop
+    # Handle exit
+```
+**Features:**
+- Press-to-talk (Enter key)
+- Clean console output (no token spam)
+- Emotion emoji display
+- Continuous conversation
+**Lines:** ~270
+
+#### `voice_input.py`
+**Purpose:** Speech-to-text using Faster Whisper  
+**Key Components:**
+```python
+SAMPLE_RATE = 16000
+DURATION = 5  # seconds
+model = WhisperModel("small", device="cpu", compute_type="int8")
+
+def record_audio():
+    # Capture from mic using sounddevice
+    # Save to input.wav
+
+def speech_to_text():
+    # Transcribe with Faster Whisper
+    # Return text
+```
+**Configuration:**
+- Model size: small (base/medium/large available)
+- Device: cpu (cuda for GPU)
+- Compute type: int8 (float16 for GPU)
+**Lines:** ~29
+
+#### `voice_output_edge.py`
+**Purpose:** Text-to-speech using Edge TTS (default)  
+**Key Components:**
+```python
+VOICE = get_voice()  # From voice_config
+SPEECH_RATE = "+10%"
+PITCH_SHIFT = "+5Hz"
+
+async def tts_generate(text, output_file):
+    # Generate speech with Edge TTS
+    # Save to file
+
+async def speak_async(text):
+    # Create temp file
+    # Generate TTS
+    # Play with PyGame
+    # Cleanup temp file
+
+def speak(text):
+    # Sync wrapper
+    # Run in new thread
+```
+**Features:**
+- Temporary file management
+- Overlay integration (optional)
+- Error handling
+- Thread-safe
+**Lines:** ~123
+
+#### `voice_output_rvc.py`
+**Purpose:** TTS + RVC voice conversion (advanced)  
+**Key Components:**
+```python
+from rvc.inferencer import convert
+
+BASE_WAV = "base.wav"
+RVC_WAV = "alisa.wav"
+
+async def tts_base(text):
+    # Generate with Edge TTS
+    # Save to base.wav
+
+async def speak_async(text):
+    # Generate base TTS
+    # Convert with RVC
+    # Play with PyGame
+
+def speak(text):
+    # Sync wrapper
+```
+**Requirements:**
+- RVC model (.pth)
+- Feature index (.index)
+- PyTorch
+**Lines:** ~105
+
+#### `voice_config.py`
+**Purpose:** Voice customization settings  
+**Key Components:**
+```python
+VOICE_OPTIONS = {
+    "ana": "en-US-AnaNeural",  # Recommended
+    "jenny": "en-US-JennyNeural",
+    "nanami": "ja-JP-NanamiNeural",
+    "xiaoxiao": "zh-CN-XiaoxiaoNeural",
+    # ...
+}
+
 SELECTED_VOICE = "ana"
 SPEECH_RATE = "+15%"
 PITCH_SHIFT = "+10Hz"
+
+EMOTION_PROSODY = {
+    "happy": {"rate": "+15%", "pitch": "+8Hz"},
+    "sad": {"rate": "-10%", "pitch": "-5Hz"},
+    # ...
+}
+
+def get_voice():
+    return VOICE_OPTIONS[SELECTED_VOICE]
+
+def get_prosody(emotion="neutral"):
+    return EMOTION_PROSODY[emotion]
+```
+**Lines:** ~47
+
+#### `install_voice.ps1`
+**Purpose:** Automated dependency installer  
+**Contents:**
+```powershell
+# Activate venv if exists
+# Install edge-tts
+# Install simpleaudio
+# Install soundfile
+# Show next steps
+```
+**Lines:** ~33
+
+#### `rvc/inferencer.py`
+**Purpose:** RVC conversion wrapper  
+**Key Components:**
+```python
+RVC_PATH = "rvc"
+MODEL_PATH = "rvc/weights/alisa.pth"
+INDEX_PATH = "rvc/index/alisa.index"
+
+def convert(input_wav, output_wav):
+    # Run RVC inference
+    # subprocess.run() to call RVC script
+```
+**Lines:** ~14
+
+#### `rvc/weights/` Directory
+**Purpose:** Store RVC model weights (.pth files)  
+**Contents:** User-provided or trained models
+
+#### `rvc/index/` Directory
+**Purpose:** Store RVC feature indices (.index files)  
+**Contents:** User-provided or trained indices
+
+#### `requirements.txt`
+**Contents:**
+```
+edge-tts>=6.1.0
+soundfile>=0.12.0
+simpleaudio>=1.0.4
+librosa>=0.10.0
+numpy>=1.24.0
+sounddevice>=0.4.0
+scipy>=1.10.0
+faster-whisper>=0.10.0
+pyttsx3>=2.90
+pygame>=2.5.0
 ```
 
-### `overlay/main.py`
+#### `README.md`
+**Purpose:** Voice module documentation  
+**Sections:**
+- Overview
+- Quick start
+- Speech-to-text (Faster Whisper)
+- Text-to-speech (Edge TTS)
+- RVC voice conversion
+- Chat interfaces
+- Overlay integration
+- Emotion processing
+- Configuration
+- Troubleshooting
+**Lines:** 956
+
+---
+
+## 👁️ Vision Module
+
+**Location:** `vision/`  
+**Purpose:** Presence detection and screen analysis  
+**Technology:** OpenCV, MediaPipe, mss, Tesseract
+
+### Structure
+
+```
+vision/
+├── vision_client.py
+├── vision_client_screen.py
+├── webcam.py
+├── face_emotion.py
+├── screen_capture.py
+├── screen_analyze.py
+├── desktop_understanding.py
+├── vision_config.py
+├── test_vision_performance.py
+├── requirements.txt
+└── README.md
+```
+
+### Files
+
+#### `vision_client.py`
+**Purpose:** Webcam presence detection (lightweight)  
+**Key Components:**
 ```python
 WS_URL = "ws://127.0.0.1:8000/ws/chat"
+
+async def vision_loop():
+    # Connect to backend
+    # Loop:
+    #   - Get downscaled frame
+    #   - Skip frames (performance)
+    #   - Detect face/emotion/attention
+    #   - Track state changes
+    #   - Send updates: [VISION_FACE]state
+    #   - Sleep DETECTION_INTERVAL
+    # Auto-reconnect on disconnect
 ```
+**Messages Sent:**
+- `[VISION_FACE]present` - Face detected
+- `[VISION_FACE]absent` - No face
+- `[VISION_FACE]focused` - Looking at screen
+- `[VISION_FACE]distracted` - Looking away
+**Lines:** ~128
 
----
-
-## 📝 Data Storage
-
-### SQLite Database (`alisa_memory.db`)
-**Location:** Project root
-
-**Tables:**
-- `memories`
-  - `id` (INTEGER PRIMARY KEY)
-  - `emotion` (TEXT)
-  - `text` (TEXT)
-  - `timestamp` (DATETIME)
-
-**Purpose:** Long-term conversation memory
-
----
-
-## 🎯 Quick Reference
-
-### Start System
-```powershell
-# Terminal 1 - Backend
-.\start_backend.ps1
-
-# Terminal 2 - Overlay (optional)
-.\start_overlay.ps1
-
-# Terminal 3 - Chat
-.\start_text_chat.ps1  # or start_voice.ps1
-```
-
-### Install Dependencies
-```powershell
-# Backend
-cd backend; pip install -r requirements.txt
-
-# Overlay
-cd overlay; pip install -r requirements.txt
-
-# Voice
-cd voice; .\install_voice.ps1  # or pip install -r requirements.txt
-```
-
-### Change Voice
-```powershell
-# Edit voice/voice_config.py
-SELECTED_VOICE = "ana"  # or nanami, xiaoxiao, etc.
-
-# Test
-cd voice; python test_voice.py
-```
-
-### Change LLM
+#### `vision_client_screen.py`
+**Purpose:** Full vision + desktop understanding  
+**Key Components:**
 ```python
-# Edit backend/app/llm_client.py
-LLM_API_URL = "http://your-llm-server:port/v1/chat/completions"
-MODEL_NAME = "your-model-name"
+SCREEN_CAPTURE_INTERVAL = 10  # seconds
+MIN_SCREEN_CAPTURE_INTERVAL = 10
+
+async def vision_with_screen_loop():
+    # Initialize webcam
+    # Connect to backend
+    # Loop:
+    #   - Capture webcam frame
+    #   - Detect face/attention
+    #   - Send presence updates
+    #   
+    #   - Periodic screen capture (10s)
+    #   - Analyze screen (OCR + window)
+    #   - Desktop understanding analysis
+    #   - Send: [VISION_DESKTOP]context
+    # Auto-reconnect
+```
+**Message Format:**
+```
+[VISION_DESKTOP]task|app|file_type|has_error|offer|window|text
+```
+**Lines:** ~158
+
+#### `webcam.py`
+**Purpose:** Webcam capture and frame processing  
+**Key Components:**
+```python
+cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, CAMERA_WIDTH)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, CAMERA_HEIGHT)
+cap.set(cv2.CAP_PROP_FPS, CAMERA_FPS)
+
+def get_frame(downscale=True):
+    # Capture frame
+    # Optionally downscale to PROCESS_WIDTH x PROCESS_HEIGHT
+    # Return numpy array
+
+def release_camera():
+    # Cleanup
+```
+**Configuration:** See vision_config.py  
+**Lines:** ~27
+
+#### `face_emotion.py`
+**Purpose:** Face and eye detection  
+**Key Components:**
+```python
+# Haar Cascade (lightweight, default)
+face_cascade = cv2.CascadeClassifier(...)
+eye_cascade = cv2.CascadeClassifier(...)
+
+# MediaPipe (optional, better accuracy)
+mp_face_detection = mp.solutions.face_detection.FaceDetection(...)
+
+# Detection cache (0.5s TTL)
+detection_cache = {'face': None, 'emotion': 'neutral', ...}
+
+def detect_face_and_emotion(frame, use_cache=True):
+    # Check cache if enabled
+    # Try Haar Cascade first (fast)
+    # Fallback to MediaPipe if enabled
+    # Return: (face_present, emotion, attention_state)
+
+def detect_with_cascade(frame):
+    # Convert to grayscale
+    # Detect faces
+    # Detect eyes in face ROI
+    # Return: ("face", "neutral", "focused"/"away")
+
+def detect_with_mediapipe(frame):
+    # Convert to RGB
+    # Detect with MediaPipe
+    # Analyze landmarks
+    # Return: (face, emotion, attention)
+```
+**Lines:** ~183
+
+#### `screen_capture.py`
+**Purpose:** Screenshot capture using mss  
+**Key Components:**
+```python
+import mss
+
+sct = mss.mss()
+
+def capture_screen():
+    monitor = sct.monitors[1]  # Primary monitor
+    img = sct.grab(monitor)
+    return np.array(img)
+```
+**Performance:** ~50-100ms  
+**Lines:** ~8
+
+#### `screen_analyze.py`
+**Purpose:** OCR and window detection  
+**Key Components:**
+```python
+import pytesseract
+import win32gui
+
+def get_active_window():
+    # Get foreground window title
+    return win32gui.GetWindowText(...)
+
+def analyze_screen(frame):
+    # Convert to grayscale
+    # Run OCR with Tesseract
+    # Get active window
+    # Return: {"window": title, "text": text[:300]}
+```
+**Lines:** ~15
+
+#### `desktop_understanding.py`
+**Purpose:** Phase 10A - Context analysis system  
+**Key Components:**
+```python
+class DesktopUnderstandingSystem:
+    app_categories: Dict  # 8 categories
+    error_patterns: List  # 12+ patterns
+    file_extensions: Dict  # 20+ extensions
+    
+    last_screen_context: Dict
+    last_offer_time: float
+    
+    analyze_screen_context(window_title, screen_text):
+        # Detect app type (8 categories)
+        # Detect file type (5 categories)
+        # Detect errors (12+ patterns)
+        # Infer task (12 types)
+        # Build context summary
+        # Decide if should offer help
+        # Return complete analysis
+    
+    _detect_app_type()
+    _detect_file_type()
+    _detect_errors()
+    _infer_task()
+    _should_offer_help()
+    _build_context_summary()
+```
+**Categories:**
+- Apps: code, browser, terminal, document, pdf, media, communication
+- Files: code, web, data, doc, config
+- Tasks: coding_python, coding_js, browsing, debugging, etc.
+**Lines:** ~351
+
+#### `vision_config.py`
+**Purpose:** Performance presets and settings  
+**Key Components:**
+```python
+# Detection method
+USE_MEDIAPIPE = False  # True for enhanced
+
+# Performance
+DETECTION_INTERVAL = 1.5  # seconds
+FRAME_SKIP = 2
+USE_DETECTION_CACHE = True
+
+# Camera
+CAMERA_WIDTH = 640
+CAMERA_HEIGHT = 480
+CAMERA_FPS = 15
+PROCESS_WIDTH = 320
+PROCESS_HEIGHT = 240
+
+# Thresholds
+CASCADE_SCALE_FACTOR = 1.2
+CASCADE_MIN_NEIGHBORS = 4
+CASCADE_MIN_FACE_SIZE = (40, 40)
+MEDIAPIPE_MIN_CONFIDENCE = 0.7
+MIN_EYES_FOR_FOCUS = 2
+
+# Presets
+def apply_preset(preset_name):
+    # "ultra_light" - Minimal CPU
+    # "balanced" - Default
+    # "enhanced" - Better accuracy
+
+CURRENT_PRESET = "balanced"
+```
+**Lines:** ~88
+
+#### `test_vision_performance.py`
+**Purpose:** Performance benchmarking tool  
+**Key Components:**
+```python
+def get_process_stats():
+    # CPU and memory usage
+
+def test_vision_performance(duration=30):
+    # Warm up camera
+    # Run for specified duration
+    # Collect metrics:
+    #   - Frame count
+    #   - Detection count
+    #   - Face detected count
+    #   - CPU usage
+    #   - Memory usage
+    #   - Detection time
+    # Print summary report
+```
+**Usage:** `python test_vision_performance.py`  
+**Lines:** ~177
+
+#### `requirements.txt`
+**Contents:**
+```
+opencv-python>=4.8.0
+mediapipe==0.10.9
+numpy>=1.24.0
+websockets>=11.0
+mss>=9.0.0
+pytesseract>=0.3.10
+pywin32>=306
+Pillow>=10.0.0
+psutil>=5.9.0
 ```
 
----
-
-## 🐛 Common Issues
-
-### "Backend not running"
-- Make sure `start_backend.ps1` is running
-- Check port 8000 is not in use
-
-### "Overlay won't connect"
-- Start backend first
-- Check WebSocket URL in `overlay/main.py`
-
-### "No voice output"
-- Install voice dependencies: `.\voice\install_voice.ps1`
-- Check audio output device
-
-### "RVC conversion fails"
-- Make sure model files are in `voice/rvc/weights/` and `voice/rvc/index/`
-- Fall back to Edge TTS (edit imports in `text_chat.py`)
+#### `README.md`
+**Purpose:** Vision module documentation  
+**Sections:**
+- Overview
+- Quick start
+- Presence detection
+- Screen analysis
+- Desktop understanding (Phase 10A)
+- Configuration (presets)
+- Troubleshooting
+- Performance metrics
+**Lines:** 894
 
 ---
 
-## 📖 Additional Resources
+## 🚀 Scripts Module
 
-- **Main README:** `README.md` - Project overview
-- **Development Guide:** `DEVELOPMENT.md` - Developer docs
-- **Quick Start:** `QUICKSTART.md` - Fast setup guide
-- **Voice Setup:** `voice/VOICE_SETUP.md` - Voice configuration
+**Location:** `scripts/`  
+**Purpose:** Startup scripts for different configurations  
+**Technology:** PowerShell
+
+### Structure
+
+```
+scripts/
+├── start_backend.ps1
+├── start_overlay.ps1
+├── start_text_chat.ps1
+├── start_voice_chat.ps1
+├── start_voice.ps1
+├── start_vision.ps1
+├── start_vision_screen.ps1
+├── start_phase10a.ps1
+├── start_phase10b.ps1
+├── start_phase10c.ps1
+├── test_idle_system.py
+├── test_phase10b.py
+├── test_phase10c.py
+├── view_history.py
+└── README.md
+```
+
+### Files
+
+#### `start_backend.ps1`
+**Purpose:** Start backend server  
+**Actions:**
+```powershell
+# Navigate to backend/
+# Activate venv
+# Start: uvicorn backend.app.main:app --reload
+```
+**Lines:** ~15
+
+#### `start_overlay.ps1`
+**Purpose:** Start avatar overlay  
+**Actions:**
+```powershell
+# Navigate to overlay/
+# Start: python main.py
+```
+**Lines:** ~10
+
+#### `start_text_chat.ps1`
+**Purpose:** Start text chat interface  
+**Actions:**
+```powershell
+# Navigate to voice/
+# Start: python text_chat.py
+```
+**Lines:** ~10
+
+#### `start_voice_chat.ps1`
+**Purpose:** Start voice chat interface  
+**Actions:**
+```powershell
+# Navigate to voice/
+# Start: python voice_chat_optimized.py
+```
+**Lines:** ~10
+
+#### `start_voice.ps1`
+**Purpose:** Alias for start_voice_chat.ps1  
+**Lines:** ~10
+
+#### `start_vision.ps1`
+**Purpose:** Start webcam presence detection  
+**Actions:**
+```powershell
+# Navigate to vision/
+# Start: python vision_client.py
+```
+**Lines:** ~10
+
+#### `start_vision_screen.ps1`
+**Purpose:** Start full vision with screen analysis  
+**Actions:**
+```powershell
+# Navigate to vision/
+# Start: python vision_client_screen.py
+```
+**Lines:** ~10
+
+#### `start_phase10a.ps1`
+**Purpose:** Start all modules for Phase 10A  
+**Actions:**
+```powershell
+# Start backend
+# Start overlay
+# Start vision (screen)
+# Start text chat
+```
+**Lines:** ~20
+
+#### `start_phase10b.ps1`
+**Purpose:** Start with desktop actions enabled  
+**Actions:**
+```powershell
+# Same as Phase 10A
+# Desktop actions already in backend
+```
+**Lines:** ~20
+
+#### `start_phase10c.ps1`
+**Purpose:** Start with task memory enabled  
+**Actions:**
+```powershell
+# Same as Phase 10B
+# Task memory already in backend
+```
+**Lines:** ~20
+
+#### `test_idle_system.py`
+**Purpose:** Test idle thought system  
+**Key Components:**
+```python
+# Test idle companion timing
+# Test probability calculations
+# Test context generation
+```
+**Usage:** `python test_idle_system.py`  
+**Lines:** ~50
+
+#### `test_phase10b.py`
+**Purpose:** Test desktop actions  
+**Key Components:**
+```python
+# Test action parsing
+# Test safety checks
+# Test execution
+```
+**Usage:** `python test_phase10b.py`  
+**Lines:** ~50
+
+#### `test_phase10c.py`
+**Purpose:** Test task memory  
+**Key Components:**
+```python
+# Test pattern detection
+# Test learning
+# Test interrupt decisions
+```
+**Usage:** `python test_phase10c.py`  
+**Lines:** ~50
+
+#### `view_history.py`
+**Purpose:** View conversation history  
+**Key Components:**
+```python
+from backend.app.db import SessionLocal
+from backend.app.models import ConversationHistory
+
+# Query all messages
+# Display with formatting
+```
+**Usage:** `python view_history.py`  
+**Lines:** ~30
+
+#### `README.md`
+**Purpose:** Scripts documentation  
+**Contents:**
+- Overview of all scripts
+- Usage instructions
+- Prerequisites
+**Lines:** ~100
 
 ---
 
-**Last Updated:** January 14, 2026
-**Version:** 1.0.0
-**Maintainer:** Alisa Assistant Team
+## 📚 Documentation
+
+**Location:** `docs/`  
+**Purpose:** Comprehensive project documentation  
+**Technology:** Markdown
+
+### Structure
+
+```
+docs/
+├── SYSTEM_ARCHITECTURE.md
+├── CODEBASE_STRUCTURE.md
+├── DEVELOPMENT.md
+├── QUICK_REFERENCE.md
+├── README.md
+├── IDLE_THOUGHT_ENHANCED.md
+├── IDLE_THOUGHT_GUIDE.md
+├── PHASE_10A_GETTING_STARTED.md
+├── PHASE_10A_IMPLEMENTATION.md
+├── PHASE_10A_QUICK_REF.md
+├── PHASE_10A_VISUAL_GUIDE.md
+├── PHASE_10B_GETTING_STARTED.md
+├── PHASE_10B_IMPLEMENTATION.md
+├── PHASE_10B_QUICK_REF.md
+├── PHASE_10B_VISUAL_GUIDE.md
+├── PHASE_10C_GETTING_STARTED.md
+├── PHASE_10C_IMPLEMENTATION.md
+├── PHASE_10C_QUICK_REF.md
+└── PHASE_10C_VISUAL_GUIDE.md
+```
+
+### Files
+
+#### `SYSTEM_ARCHITECTURE.md`
+**Purpose:** Complete system architecture documentation  
+**Sections:**
+- Overview and design principles
+- System design patterns
+- Module architecture
+- Communication flow
+- Data flow diagrams
+- Technology stack
+- Deployment architecture
+- Security architecture
+- Performance architecture
+**Lines:** ~800
+
+#### `CODEBASE_STRUCTURE.md` (this document)
+**Purpose:** File-by-file codebase documentation  
+**Sections:**
+- Project root
+- Backend module (all files)
+- Overlay module (all files)
+- Voice module (all files)
+- Vision module (all files)
+- Scripts module (all files)
+- Documentation (all files)
+
+#### `DEVELOPMENT.md`
+**Purpose:** Development guide and best practices  
+**Sections:**
+- Setup instructions
+- Development workflow
+- Code style guide
+- Testing guidelines
+- Contribution guide
+- Git workflow
+
+#### `QUICK_REFERENCE.md`
+**Purpose:** Quick command reference  
+**Sections:**
+- Common commands
+- Startup sequences
+- Configuration shortcuts
+- Troubleshooting quick fixes
+
+#### `README.md`
+**Purpose:** Documentation overview  
+**Contents:**
+- Index of all documentation
+- Getting started guide
+- Documentation navigation
+
+#### Phase Documentation Files
+
+Each phase (10A, 10B, 10C) has 4 documents:
+
+1. **GETTING_STARTED.md** - Quick start guide
+2. **IMPLEMENTATION.md** - Technical implementation details
+3. **QUICK_REF.md** - Command and API reference
+4. **VISUAL_GUIDE.md** - Diagrams and visual explanations
+
+**Phase 10A:** Desktop Understanding  
+**Phase 10B:** Desktop Actions  
+**Phase 10C:** Task Memory & Habits  
+
+#### `IDLE_THOUGHT_ENHANCED.md`
+**Purpose:** Enhanced idle thought system documentation  
+**Sections:**
+- Phase 9B companion mode
+- Timing and probability
+- Context awareness
+- Integration guide
+
+#### `IDLE_THOUGHT_GUIDE.md`
+**Purpose:** Idle thought user guide  
+**Sections:**
+- How it works
+- Configuration
+- Customization
+- Examples
+
+---
+
+## 📊 File Statistics
+
+### Total Files by Module
+
+| Module | Python Files | Config Files | Docs | Total |
+|--------|-------------|--------------|------|-------|
+| Backend | 12 | 1 (requirements.txt) | 1 README | 14 |
+| Overlay | 5 | 1 | 1 README | 7 |
+| Voice | 6 | 2 | 1 README | 9 |
+| Vision | 8 | 1 | 1 README | 10 |
+| Scripts | 7 | 0 | 1 README | 8 |
+| Docs | 0 | 0 | 19 | 19 |
+| **Total** | **38** | **5** | **24** | **67** |
+
+### Lines of Code (Approximate)
+
+| Module | Python LOC | Docs LOC | Total LOC |
+|--------|-----------|----------|-----------|
+| Backend | ~2,500 | 681 | ~3,181 |
+| Overlay | ~400 | 663 | ~1,063 |
+| Voice | ~800 | 956 | ~1,756 |
+| Vision | ~800 | 894 | ~1,694 |
+| Scripts | ~200 | ~100 | ~300 |
+| Docs | 0 | ~5,000 | ~5,000 |
+| **Total** | **~4,700** | **~8,294** | **~12,994** |
+
+---
+
+## 🔍 Quick File Lookup
+
+### By Functionality
+
+**WebSocket Communication:**
+- `backend/app/ws.py` - Server handler
+- `overlay/main.py` - Client
+- `voice/text_chat.py` - Client
+- `vision/vision_client.py` - Client
+
+**LLM Integration:**
+- `backend/app/llm_client.py` - HTTP streaming
+- `backend/app/prompt.py` - System prompt
+
+**Memory System:**
+- `backend/app/memory.py` - In-memory buffer
+- `backend/app/memory_long.py` - SQLite persistence
+- `backend/app/db.py` - Database config
+- `backend/app/models.py` - ORM models
+
+**Emotion System:**
+- `backend/app/emotion.py` - Extraction
+- `overlay/avatar_window.py` - Display
+- `voice/text_chat.py` - Cleaning
+
+**Voice I/O:**
+- `voice/voice_input.py` - STT
+- `voice/voice_output_edge.py` - TTS
+- `voice/voice_config.py` - Settings
+
+**Vision Detection:**
+- `vision/face_emotion.py` - Face/eye detection
+- `vision/screen_capture.py` - Screenshots
+- `vision/desktop_understanding.py` - Context analysis
+
+**Phase Features:**
+- `backend/app/idle_companion.py` - Phase 9B
+- `vision/desktop_understanding.py` - Phase 10A
+- `backend/app/desktop_actions.py` - Phase 10B
+- `backend/app/task_memory.py` - Phase 10C
+
+---
+
+## 📝 Notes
+
+### File Naming Conventions
+
+- **snake_case** - All Python files
+- **PascalCase** - Class names only
+- **UPPERCASE** - Constants, markdown docs
+- **kebab-case** - Not used
+
+### Import Patterns
+
+**Absolute imports (backend):**
+```python
+from .memory import MemoryBuffer
+from .llm_client import stream_llm_response
+```
+
+**Relative imports (cross-module):**
+```python
+sys.path.append("../overlay")
+from avatar_controller import on_speech_start
+```
+
+### Configuration Files
+
+- `*_config.py` - Python configuration modules
+- `requirements.txt` - Pip dependencies
+- `*.ps1` - PowerShell scripts
+- `*.md` - Markdown documentation
+
+---
+
+**Document Version:** 1.0  
+**Last Updated:** January 17, 2026  
+**Status:** Complete ✅  
+**Total Files Documented:** 67
