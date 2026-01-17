@@ -2,6 +2,8 @@ import asyncio
 import edge_tts
 import os
 import sys
+import tempfile
+import time
 from pathlib import Path
 
 # Try to import overlay controller, but make it truly optional
@@ -26,9 +28,7 @@ except ImportError:
     SPEECH_RATE = "+10%"
     PITCH_SHIFT = "+5Hz"
 
-OUTPUT_FILE = "alisa_voice.mp3"
-
-async def tts_generate(text):
+async def tts_generate(text, output_file):
     """Generate speech with cute voice using Edge TTS"""
     communicate = edge_tts.Communicate(
         text, 
@@ -36,30 +36,35 @@ async def tts_generate(text):
         rate=SPEECH_RATE,
         pitch=PITCH_SHIFT
     )
-    await communicate.save(OUTPUT_FILE)
+    await communicate.save(output_file)
 
 async def speak_async(text):
     """Async version of speak - use this from async contexts"""
+    output_file = None
     try:
         import pygame
         
         # Note: Avatar control is now done via WebSocket, not direct function calls
         # This allows overlay to run in separate process
+        
+        # Create a unique temporary file for this TTS generation
+        fd, output_file = tempfile.mkstemp(suffix='.mp3', prefix='alisa_voice_')
+        os.close(fd)  # Close the file descriptor immediately
 
         # Stop and unload any previous audio to release the file
         if pygame.mixer.get_init():
             pygame.mixer.music.stop()
             pygame.mixer.music.unload()
         
-        # Generate TTS audio
-        await tts_generate(text)
+        # Generate TTS audio to the temporary file
+        await tts_generate(text, output_file)
 
         # Initialize pygame mixer if not already
         if not pygame.mixer.get_init():
             pygame.mixer.init()
 
         # Play audio using pygame
-        pygame.mixer.music.load(OUTPUT_FILE)
+        pygame.mixer.music.load(output_file)
         pygame.mixer.music.play()
         
         print(f"🎵 Audio playback started (duration tracking enabled)")
@@ -72,12 +77,28 @@ async def speak_async(text):
         
         # Unload the music to release the file
         pygame.mixer.music.unload()
+        
+        # Clean up the temporary file
+        if output_file and os.path.exists(output_file):
+            try:
+                # Small delay to ensure file is fully released
+                time.sleep(0.1)
+                os.unlink(output_file)
+            except Exception as cleanup_error:
+                print(f"⚠️ Warning: Could not delete temp file {output_file}: {cleanup_error}")
                 
     except Exception as e:
-        print(f"❌ Voice output error: {e}")
+        print(f"⚠️ TTS error: {e}")
         import traceback
         traceback.print_exc()
         print(f"[TEXT] {text}")
+        
+        # Try to clean up on error
+        if output_file and os.path.exists(output_file):
+            try:
+                os.unlink(output_file)
+            except:
+                pass
 
 def speak(text):
     """Speak text using cute Edge TTS voice - sync wrapper"""
