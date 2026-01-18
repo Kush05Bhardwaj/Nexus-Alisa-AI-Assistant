@@ -2,8 +2,6 @@
 
 FastAPI backend server with LLM integration, conversation memory, and advanced desktop integration features.
 
-**Last Updated:** January 17, 2026 (Phase 10C Complete)
-
 ---
 
 ## 📋 Overview
@@ -218,7 +216,7 @@ Modes affect Alisa's tone, response style, and emotional expression.
 
 ## 🧠 Advanced Features
 
-### Phase 9B: Idle Companion System
+### Idle Companion System
 
 **File:** `app/idle_companion.py`
 
@@ -241,7 +239,7 @@ Natural, spontaneous behavior when user is inactive:
 
 ---
 
-### Phase 10A: Desktop Understanding
+### Desktop Understanding
 
 **Integration:** Via WebSocket vision updates from `vision/desktop_understanding.py`
 
@@ -257,7 +255,7 @@ Alisa gains awareness of your work environment:
 
 ---
 
-### Phase 10B: Desktop Actions
+### Desktop Actions
 
 **File:** `app/desktop_actions.py`
 
@@ -321,7 +319,7 @@ maximize_window()         # "maximize window"
 
 ---
 
-### Phase 10C: Task Memory & Habits
+### Task Memory & Habits
 
 **File:** `app/task_memory.py`
 
@@ -509,23 +507,6 @@ SELECT * FROM conversation_history ORDER BY timestamp DESC LIMIT 10;
 .quit
 ```
 
-### Testing
-
-**Test idle system:**
-```powershell
-python ..\scripts\test_idle_system.py
-```
-
-**Test Phase 10B actions:**
-```powershell
-python ..\scripts\test_phase10b.py
-```
-
-**Test Phase 10C learning:**
-```powershell
-python ..\scripts\test_phase10c.py
-```
-
 ---
 
 ## 📊 Performance
@@ -589,7 +570,7 @@ python ..\scripts\test_phase10c.py
 4. Restart backend server
 5. Check for network errors in browser console
 
-### Desktop Actions Not Working (Phase 10B)
+### Desktop Actions Not Working 
 
 **Symptoms:** Actions fail silently, permission errors
 
@@ -601,7 +582,7 @@ python ..\scripts\test_phase10c.py
 5. Run backend with appropriate privileges
 6. Verify `pyautogui` is installed
 
-### Task Memory Not Learning (Phase 10C)
+### Task Memory Not Learning 
 
 **Symptoms:** No pattern detection, no adaptive behavior
 
@@ -612,7 +593,7 @@ python ..\scripts\test_phase10c.py
 4. Review storage path in `task_memory.py`
 5. Ensure JSON files are being created
 
-### Idle Thoughts Not Triggering (Phase 9B)
+### Idle Thoughts Not Triggering 
 
 **Symptoms:** No spontaneous speech during silence
 
@@ -656,10 +637,6 @@ python ..\scripts\test_phase10c.py
 ## 📚 Related Documentation
 
 - **[Main README](../README.md)** - Project overview
-- **[Phase 10A Docs](../docs/PHASE_10A_*.md)** - Desktop understanding
-- **[Phase 10B Docs](../docs/PHASE_10B_*.md)** - Desktop actions
-- **[Phase 10C Docs](../docs/PHASE_10C_*.md)** - Task memory & habits
-- **[Idle Thought Guide](../docs/IDLE_THOUGHT_GUIDE.md)** - Idle companion system
 - **[Codebase Structure](../docs/CODEBASE_STRUCTURE.md)** - Full architecture
 
 ---
@@ -674,7 +651,6 @@ python ..\scripts\test_phase10c.py
 
 ---
 
-**Version:** 3.0  
-**Status:** Phase 10C Complete ✅  
+**Version:** 3.0   
 **Tested With:** Python 3.10+, Windows 11, Llama.cpp  
 **License:** See [LICENSE](../LICENSE)

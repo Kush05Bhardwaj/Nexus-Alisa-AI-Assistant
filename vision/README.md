@@ -2,7 +2,7 @@
 
 Vision system for presence detection, attention tracking, screen analysis, and desktop understanding.
 
-**Last Updated:** January 17, 2026 (Phase 10A Integrated + Performance Optimizations)
+**Last Updated:** January 17, 2026
 
 ---
 
@@ -937,7 +937,7 @@ python vision_client_screen.py
 
 ---
 
-**Version:** 2.0 (Phase 10A Integrated)  
+**Version:** 2.0  
 **Status:** Stable ✅  
 **Tested With:** Python 3.10+, Windows 10/11, OpenCV 4.8+  
 **License:** See [LICENSE](../LICENSE)
