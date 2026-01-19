@@ -255,7 +255,7 @@ Each module has detailed documentation covering setup, API, features, and troubl
 
 ## 🎯 Feature Roadmap
 
-### ✅ Completed (Phase 10C)
+### ✅ Completed 
 - [x] Core chat functionality with LLM streaming
 - [x] Animated avatar overlay (6 emotions)
 - [x] Voice output (Edge TTS) and input (Faster Whisper)
